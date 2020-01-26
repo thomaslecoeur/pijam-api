@@ -1,3 +1,7 @@
+# TODO
+
+Set github heroku_api_key secrets with definitive token
+
 # Node - Koa - Typescript Project
 
 [![NPM version](https://img.shields.io/npm/v/node-typescript-koa-rest.svg)](https://www.npmjs.com/package/node-typescript-koa-rest)
