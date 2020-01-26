@@ -9,6 +9,6 @@ export default class GeneralController {
         'A simple welcome message to verify the service is up and running.'
     )
     public static async helloWorld(ctx: BaseContext) {
-        ctx.body = 'Hello World!';
+        ctx.body = 'Welcome to the Pijam API!';
     }
 }
