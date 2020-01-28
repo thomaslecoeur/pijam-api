@@ -1,4 +1,4 @@
-import { IsEmail, Length } from 'class-validator';
+import { IsEmail, Length, MaxLength } from 'class-validator';
 import {
     Column,
     Entity,
@@ -58,7 +58,7 @@ export class User {
         length: 80,
         nullable: true
     })
-    @Length(0, 80)
+    @MaxLength(80)
     nickname: string;
 
     @Column({
