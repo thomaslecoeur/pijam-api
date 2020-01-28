@@ -228,7 +228,7 @@ export default class UserController {
             ctx.status = 400;
             ctx.body =
                 "The user you are trying to delete doesn't exist in the db";
-        } else if (false) {
+        } else if (ctx.state.user.id !== userToRemove.auth0Id) {
             // check user's token id and user id are the same
             // if not, return a FORBIDDEN status code and error message
             ctx.status = 403;
