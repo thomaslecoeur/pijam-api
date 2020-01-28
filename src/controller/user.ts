@@ -185,12 +185,12 @@ export default class UserController {
 
         if (errors.length > 0) {
             // return BAD REQUEST status code and errors array
-            ctx.status = 400;
+            ctx.status = 409;
             ctx.body = errors;
         } else if (!(await userRepository.findOne(userToBeUpdated.id))) {
             // check if a user with the specified id exists
             // return a BAD REQUEST status code and error message
-            ctx.status = 400;
+            ctx.status = 404;
             ctx.body =
                 "The user you are trying to update doesn't exist in the db";
         } else if (
@@ -200,7 +200,7 @@ export default class UserController {
             })
         ) {
             // return BAD REQUEST status code and email already exists error
-            ctx.status = 400;
+            ctx.status = 409;
             ctx.body = 'The specified e-mail address already exists';
         } else {
             // save the user contained in the PUT body
