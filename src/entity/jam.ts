@@ -35,14 +35,14 @@ export class Jam {
         type => User,
         user => user.jams,
         {
-            onDelete: 'CASCADE'
+            onDelete: 'CASCADE',
+            eager: true
         }
     )
-    @IsDefined()
-    author: User;
+    author?: User;
 
     @Column('geometry', {
-        nullable: true,
+        nullable: false,
         spatialFeatureType: 'Point',
         srid: 4326
     })
@@ -56,7 +56,8 @@ export class Jam {
         type => User,
         user => user.attendedJams,
         {
-            onDelete: 'CASCADE'
+            onDelete: 'CASCADE',
+            eager: true
         }
     )
     @JoinTable()

@@ -8,14 +8,19 @@ protectedRouter.get('/users', controller.user.getUsers);
 protectedRouter.get('/users/:id', controller.user.getUser);
 protectedRouter.post('/users', controller.user.createUser);
 protectedRouter.put('/users/:id', controller.user.updateUser);
+protectedRouter.put(
+    '/me/availability',
+    controller.user.updateCurrentUserAvailability
+);
 protectedRouter.delete('/users/:id', controller.user.deleteUser);
 protectedRouter.delete('/testusers', controller.user.deleteTestUsers);
 
-// USER ROUTES
+// JAM ROUTES
 protectedRouter.get('/jams', controller.jam.getJams);
 protectedRouter.get('/jams/:id', controller.jam.getJam);
 protectedRouter.post('/jams', controller.jam.createJam);
 protectedRouter.put('/jams/:id', controller.jam.updateJam);
+protectedRouter.put('/jams/:id/join', controller.jam.joinJam);
 protectedRouter.delete('/jams/:id', controller.jam.deleteJam);
 protectedRouter.delete('/testjams', controller.jam.deleteTestJams);
 

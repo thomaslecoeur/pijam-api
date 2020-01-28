@@ -5,7 +5,8 @@ import {
     Not,
     Equal,
     Like,
-    SelectQueryBuilder
+    SelectQueryBuilder,
+    getConnection
 } from 'typeorm';
 import { validate, ValidationError } from 'class-validator';
 import {
@@ -24,6 +25,8 @@ import * as qs from 'qs';
 
 @responsesAll({
     200: { description: 'success' },
+    201: { description: 'jam created' },
+    204: { description: 'jam updated' },
     400: { description: 'bad request' },
     401: { description: 'unauthorized, missing/wrong jwt token' }
 })
@@ -104,9 +107,7 @@ export default class JamController {
         const jamRepository: Repository<Jam> = getManager().getRepository(Jam);
 
         // load jam by id
-        const jam: Jam = await jamRepository.findOne(+ctx.params.id || 0, {
-            relations: ['author', 'attendants']
-        });
+        const jam: Jam = await jamRepository.findOne(+ctx.params.id || 0);
 
         if (jam) {
             // return OK status code and loaded jam object
@@ -117,6 +118,56 @@ export default class JamController {
             ctx.status = 400;
             ctx.body =
                 "The jam you are trying to retrieve doesn't exist in the db";
+        }
+    }
+
+    @request('put', '/jams/{id}/join')
+    @summary('Join a jam by id')
+    @path({
+        id: { type: 'number', required: true, description: 'id of jam' }
+    })
+    public static async joinJam(ctx: BaseContext) {
+        // get a jam repository to perform operations with jam
+        const jamRepository: Repository<Jam> = getManager().getRepository(Jam);
+        const userRepository: Repository<User> = getManager().getRepository(
+            User
+        );
+
+        // load jam by id
+        const jamToJoin: Jam = await jamRepository.findOne(+ctx.params.id, {
+            relations: ['attendants']
+        });
+
+        const userToJoin: User = await userRepository.findOne({
+            auth0Id: ctx.state.user.id || 0
+        });
+
+        if (!jamToJoin) {
+            // return a BAD REQUEST status code and error message
+            ctx.status = 400;
+            ctx.body =
+                "The jam you are trying to retrieve doesn't exist in the db";
+        } else if (!userToJoin) {
+            // return a BAD REQUEST status code and error message
+            ctx.status = 400;
+            ctx.body =
+                "The user you are trying to retrieve doesn't exist in the db";
+        } else {
+            jamToJoin.attendants.push(userToJoin);
+
+            // validate jam entity
+            const errors: ValidationError[] = await validate(jamToJoin); // errors is an array of validation errors
+
+            if (errors.length > 0) {
+                // return BAD REQUEST status code and errors array
+                ctx.status = 400;
+                ctx.body = errors;
+            } else {
+                const jam = await jamRepository.save(jamToJoin);
+                // return OK status code and loaded jam object
+                ctx.status = 204;
+                ctx.body = jam;
+            }
         }
     }
 
@@ -132,15 +183,17 @@ export default class JamController {
 
         // build up entity jam to be saved
         const jamToBeSaved: Jam = new Jam();
-        jamToBeSaved.author = await userRepository.findOne(
-            ctx.request.body.author
-        );
+
+        // TODO: If user is super admin, allow ctx.request.body.id to find user
+        const author = await userRepository.findOne({
+            auth0Id: ctx.state.user.id
+        });
+
+        jamToBeSaved.author = author;
 
         jamToBeSaved.coordinates = new Point(ctx.request.body.coordinates);
 
-        jamToBeSaved.attendants = [
-            await userRepository.findOne(ctx.request.body.author)
-        ];
+        jamToBeSaved.attendants = [author];
 
         // validate jam entity
         const errors: ValidationError[] = await validate(jamToBeSaved); // errors is an array of validation errors
@@ -223,7 +276,7 @@ export default class JamController {
             ctx.status = 400;
             ctx.body =
                 "The jam you are trying to delete doesn't exist in the db";
-        } else if (ctx.state.user.email !== jamToRemove.author.email) {
+        } else if (ctx.state.user.id !== jamToRemove.author.auth0Id) {
             // check jam's token id and jam id are the same
             // if not, return a FORBIDDEN status code and error message
             ctx.status = 403;
@@ -244,7 +297,7 @@ export default class JamController {
 
         // find test jams
         const jamsToRemove: Jam[] = await jamRepository.find({
-            where: { email: Like('%@citest.com') }
+            author: { email: Like('%@thomaslecoeur.test') }
         });
 
         // the jam is there so can be removed

@@ -9,7 +9,12 @@ import {
     responsesAll,
     tagsAll
 } from 'koa-swagger-decorator';
-import { User, userSchema } from '../entity/user';
+import {
+    User,
+    userSchemaMinimal,
+    availabilitySchema,
+    AvailabilityMeta
+} from '../entity/user';
 
 @responsesAll({
     200: { description: 'success' },
@@ -64,8 +69,14 @@ export default class UserController {
 
     @request('post', '/users')
     @summary('Create a user')
-    @body(userSchema)
+    @body(userSchemaMinimal)
     public static async createUser(ctx: BaseContext) {
+        // TODO: Check if request comes from superadmin
+        if (ctx.state.user.referer != 'auth0') {
+            ctx.status = 401;
+            return;
+        }
+
         // get a user repository to perform operations with user
         const userRepository: Repository<User> = getManager().getRepository(
             User
@@ -73,6 +84,9 @@ export default class UserController {
 
         // build up entity user to be saved
         const userToBeSaved: User = new User();
+        if (ctx.request.body.auth0Id) {
+            userToBeSaved.auth0Id = ctx.request.body.auth0Id;
+        }
         userToBeSaved.nickname = ctx.request.body.nickname;
         userToBeSaved.email = ctx.request.body.email;
 
@@ -98,12 +112,60 @@ export default class UserController {
         }
     }
 
+    @request('put', '/me/availability')
+    @summary("Update current user's availability")
+    @body(availabilitySchema)
+    public static async updateCurrentUserAvailability(ctx: BaseContext) {
+        // get a user repository to perform operations with user
+        const userRepository: Repository<User> = getManager().getRepository(
+            User
+        );
+
+        // update the user by specified id
+        // build up entity user to be updated
+        const userToBeUpdated: User = await userRepository.findOne({
+            auth0Id: ctx.state.user.id || 0
+        });
+
+        if (!userToBeUpdated) {
+            // check if a user with the specified id exists
+            // return a BAD REQUEST status code and error message
+            ctx.status = 400;
+            ctx.body =
+                "The user you are trying to update doesn't exist in the db";
+        } else {
+            if (ctx.request.body.availability !== undefined) {
+                userToBeUpdated.availability = ctx.request.body.availability;
+            }
+
+            userToBeUpdated.availabilityMeta = {
+                ...userToBeUpdated.availabilityMeta,
+                ...new AvailabilityMeta(ctx.request.body)
+            };
+
+            // validate user entity
+            const errors: ValidationError[] = await validate(userToBeUpdated); // errors is an array of validation errors
+
+            if (errors.length > 0) {
+                // return BAD REQUEST status code and errors array
+                ctx.status = 400;
+                ctx.body = errors;
+            } else {
+                // save the user contained in the PUT body
+                const user = await userRepository.save(userToBeUpdated);
+                // return CREATED status code and updated user
+                ctx.status = 201;
+                ctx.body = user;
+            }
+        }
+    }
+
     @request('put', '/users/{id}')
     @summary('Update a user')
     @path({
         id: { type: 'number', required: true, description: 'id of user' }
     })
-    @body(userSchema)
+    @body(userSchemaMinimal)
     public static async updateUser(ctx: BaseContext) {
         // get a user repository to perform operations with user
         const userRepository: Repository<User> = getManager().getRepository(
@@ -166,7 +228,7 @@ export default class UserController {
             ctx.status = 400;
             ctx.body =
                 "The user you are trying to delete doesn't exist in the db";
-        } else if (false) {
+        } else if (ctx.state.user.id !== userToRemove.auth0Id) {
             // check user's token id and user id are the same
             // if not, return a FORBIDDEN status code and error message
             ctx.status = 403;
@@ -187,7 +249,7 @@ export default class UserController {
 
         // find test users
         const usersToRemove: User[] = await userRepository.find({
-            where: { email: Like('%@citest.com') }
+            where: { email: Like('%@thomaslecoeur.test') }
         });
 
         // the user is there so can be removed
