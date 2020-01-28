@@ -9,7 +9,12 @@ import {
     responsesAll,
     tagsAll
 } from 'koa-swagger-decorator';
-import { User, userSchema } from '../entity/user';
+import {
+    User,
+    userSchemaMinimal,
+    availabilitySchema,
+    AvailabilityMeta
+} from '../entity/user';
 
 @responsesAll({
     200: { description: 'success' },
@@ -64,15 +69,17 @@ export default class UserController {
 
     @request('post', '/users')
     @summary('Create a user')
-    @body(userSchema)
+    @body(userSchemaMinimal)
     public static async createUser(ctx: BaseContext) {
+        // TODO: Check if request comes from admin or Auth0
+
         // get a user repository to perform operations with user
         const userRepository: Repository<User> = getManager().getRepository(
             User
         );
 
         // build up entity user to be saved
-        const userToBeSaved: User = new User();
+        const userToBeSaved: User = new User(); // TODO: Enable set by ID
         userToBeSaved.nickname = ctx.request.body.nickname;
         userToBeSaved.email = ctx.request.body.email;
 
@@ -98,12 +105,60 @@ export default class UserController {
         }
     }
 
+    @request('put', '/me/availability')
+    @summary("Update current user's availability")
+    @body(availabilitySchema)
+    public static async updateCurrentUserAvailability(ctx: BaseContext) {
+        // get a user repository to perform operations with user
+        const userRepository: Repository<User> = getManager().getRepository(
+            User
+        );
+
+        // update the user by specified id
+        // build up entity user to be updated
+        const userToBeUpdated: User = await userRepository.findOne(
+            +ctx.state.user.id || 0
+        );
+
+        if (!userToBeUpdated) {
+            // check if a user with the specified id exists
+            // return a BAD REQUEST status code and error message
+            ctx.status = 400;
+            ctx.body =
+                "The user you are trying to update doesn't exist in the db";
+        } else {
+            if (ctx.request.body.availability !== undefined) {
+                userToBeUpdated.availability = ctx.request.body.availability;
+            }
+
+            userToBeUpdated.availabilityMeta = {
+                ...userToBeUpdated.availabilityMeta,
+                ...new AvailabilityMeta(ctx.request.body)
+            };
+
+            // validate user entity
+            const errors: ValidationError[] = await validate(userToBeUpdated); // errors is an array of validation errors
+
+            if (errors.length > 0) {
+                // return BAD REQUEST status code and errors array
+                ctx.status = 400;
+                ctx.body = errors;
+            } else {
+                // save the user contained in the PUT body
+                const user = await userRepository.save(userToBeUpdated);
+                // return CREATED status code and updated user
+                ctx.status = 201;
+                ctx.body = user;
+            }
+        }
+    }
+
     @request('put', '/users/{id}')
     @summary('Update a user')
     @path({
         id: { type: 'number', required: true, description: 'id of user' }
     })
-    @body(userSchema)
+    @body(userSchemaMinimal)
     public static async updateUser(ctx: BaseContext) {
         // get a user repository to perform operations with user
         const userRepository: Repository<User> = getManager().getRepository(

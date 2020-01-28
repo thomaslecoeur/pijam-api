@@ -6,9 +6,41 @@ import {
     ManyToMany,
     OneToMany,
     CreateDateColumn,
-    UpdateDateColumn
+    UpdateDateColumn,
+    BeforeInsert
 } from 'typeorm';
 import { Jam } from './jam';
+
+export enum Instruments {
+    guitar = 'GUITAR',
+    bass = 'BASS',
+    keyboard = 'KEYBOARD',
+    voice = 'VOICE',
+    drums = 'DRUMS',
+    ukulele = 'UKULELE',
+    violin = 'VIOLIN',
+    otherWind = 'OTHER WIND',
+    otherStrings = 'OTHER STRING',
+    otherPercussion = 'OTHER PERCUSSION'
+}
+
+interface IAvailabilityMeta {
+    desc?: string;
+    instruments?: Instruments[];
+    expiresOn?: Date;
+}
+
+export class AvailabilityMeta {
+    desc?: string;
+    instruments?: Instruments[];
+    expiresOn?: Date;
+
+    constructor(obj?: IAvailabilityMeta) {
+        this.desc = obj.desc;
+        this.instruments = obj.instruments;
+        this.expiresOn = obj.expiresOn;
+    }
+}
 
 @Entity()
 export class User {
@@ -27,6 +59,16 @@ export class User {
     @Length(10, 100)
     @IsEmail()
     email: string;
+
+    @Column({
+        default: false
+    })
+    availability: Boolean;
+
+    @Column('json', {
+        nullable: true
+    })
+    availabilityMeta?: AvailabilityMeta;
 
     @OneToMany(
         type => Jam,
@@ -49,17 +91,38 @@ export class User {
     updatedDate: Date;
 }
 
-export const userSchema = {
-    id: { type: 'number', required: true, example: 1 },
-    nickname: { type: 'string', required: true, example: 'Javier' },
+export const userSchemaMinimal = {
+    nickname: { type: 'string', required: true, example: 'Thomas' },
     email: {
         type: 'string',
         required: true,
-        example: 'avileslopez.javier@gmail.com'
-    },
+        example: 'coucou@thomaslecoeur.com'
+    }
+};
+
+export const userSchema = {
+    id: { type: 'number', required: true, example: 1 },
+    ...userSchemaMinimal,
     jams: {
         type: 'array',
         required: false,
         items: { type: 'number', example: 1 }
+    }
+};
+
+export const availabilitySchema = {
+    availability: { type: 'boolean', required: false },
+    desc: {
+        type: 'string',
+        required: false,
+        example: 'Wants to jam at my place'
+    },
+    instruments: {
+        type: 'array',
+        required: false,
+        items: {
+            type: 'string',
+            example: 'GUITAR'
+        }
     }
 };

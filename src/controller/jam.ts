@@ -123,7 +123,7 @@ export default class JamController {
         }
     }
 
-    @request('get', '/jams/{id}/join')
+    @request('put', '/jams/{id}/join')
     @summary('Join a jam by id')
     @path({
         id: { type: 'number', required: true, description: 'id of jam' }
