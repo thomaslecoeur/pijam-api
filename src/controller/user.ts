@@ -97,6 +97,7 @@ export default class UserController {
         const errors: ValidationError[] = await validate(userToBeSaved); // errors is an array of validation errors
 
         if (errors.length > 0) {
+            console.log(errors);
             // return BAD REQUEST status code and errors array
             ctx.status = 400;
             ctx.body = errors;
