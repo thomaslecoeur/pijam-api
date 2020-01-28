@@ -20,6 +20,7 @@ protectedRouter.get('/jams', controller.jam.getJams);
 protectedRouter.get('/jams/:id', controller.jam.getJam);
 protectedRouter.post('/jams', controller.jam.createJam);
 protectedRouter.put('/jams/:id', controller.jam.updateJam);
+protectedRouter.put('/jams/:id/join', controller.jam.joinJam);
 protectedRouter.delete('/jams/:id', controller.jam.deleteJam);
 protectedRouter.delete('/testjams', controller.jam.deleteTestJams);
 
