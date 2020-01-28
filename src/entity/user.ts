@@ -7,7 +7,8 @@ import {
     OneToMany,
     CreateDateColumn,
     UpdateDateColumn,
-    BeforeInsert
+    BeforeInsert,
+    Index
 } from 'typeorm';
 import { Jam } from './jam';
 
@@ -47,6 +48,12 @@ export class User {
     @PrimaryGeneratedColumn()
     id: number;
 
+    @Index({ unique: true })
+    @Column({
+        nullable: true
+    })
+    auth0Id?: string;
+
     @Column({
         length: 80
     })
@@ -84,6 +91,9 @@ export class User {
     )
     attendedJams: Jam[];
 
+    @Column({ default: false })
+    superAdmin: Boolean;
+
     @CreateDateColumn()
     createdAt: Date;
 
@@ -92,6 +102,7 @@ export class User {
 }
 
 export const userSchemaMinimal = {
+    auth0Id: { type: 'string', required: true },
     nickname: { type: 'string', required: true, example: 'Thomas' },
     email: {
         type: 'string',
@@ -103,6 +114,7 @@ export const userSchemaMinimal = {
 export const userSchema = {
     id: { type: 'number', required: true, example: 1 },
     ...userSchemaMinimal,
+    superAdmin: { type: 'boolean' },
     jams: {
         type: 'array',
         required: false,

@@ -71,7 +71,11 @@ export default class UserController {
     @summary('Create a user')
     @body(userSchemaMinimal)
     public static async createUser(ctx: BaseContext) {
-        // TODO: Check if request comes from admin or Auth0
+        // TODO: Check if request comes from superadmin
+        if (ctx.state.user.referer != 'auth0') {
+            ctx.status = 401;
+            return;
+        }
 
         // get a user repository to perform operations with user
         const userRepository: Repository<User> = getManager().getRepository(
@@ -79,7 +83,10 @@ export default class UserController {
         );
 
         // build up entity user to be saved
-        const userToBeSaved: User = new User(); // TODO: Enable set by ID
+        const userToBeSaved: User = new User();
+        if (ctx.request.body.auth0Id) {
+            userToBeSaved.auth0Id = ctx.request.body.auth0Id;
+        }
         userToBeSaved.nickname = ctx.request.body.nickname;
         userToBeSaved.email = ctx.request.body.email;
 
@@ -116,9 +123,9 @@ export default class UserController {
 
         // update the user by specified id
         // build up entity user to be updated
-        const userToBeUpdated: User = await userRepository.findOne(
-            +ctx.state.user.id || 0
-        );
+        const userToBeUpdated: User = await userRepository.findOne({
+            auth0Id: ctx.state.user.id || 0
+        });
 
         if (!userToBeUpdated) {
             // check if a user with the specified id exists
