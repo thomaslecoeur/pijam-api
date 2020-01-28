@@ -107,9 +107,7 @@ export default class JamController {
         const jamRepository: Repository<Jam> = getManager().getRepository(Jam);
 
         // load jam by id
-        const jam: Jam = await jamRepository.findOne(+ctx.params.id || 0, {
-            relations: ['author', 'attendants']
-        });
+        const jam: Jam = await jamRepository.findOne(+ctx.params.id || 0);
 
         if (jam) {
             // return OK status code and loaded jam object
@@ -185,15 +183,17 @@ export default class JamController {
 
         // build up entity jam to be saved
         const jamToBeSaved: Jam = new Jam();
-        jamToBeSaved.author = await userRepository.findOne(
-            ctx.request.body.author
-        );
+
+        // TODO: If user is super admin, allow ctx.request.body.id to find user
+        const author = await userRepository.findOne({
+            auth0Id: ctx.state.user.id
+        });
+
+        jamToBeSaved.author = author;
 
         jamToBeSaved.coordinates = new Point(ctx.request.body.coordinates);
 
-        jamToBeSaved.attendants = [
-            await userRepository.findOne(ctx.request.body.author)
-        ];
+        jamToBeSaved.attendants = [author];
 
         // validate jam entity
         const errors: ValidationError[] = await validate(jamToBeSaved); // errors is an array of validation errors

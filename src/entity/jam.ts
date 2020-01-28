@@ -35,7 +35,8 @@ export class Jam {
         type => User,
         user => user.jams,
         {
-            onDelete: 'CASCADE'
+            onDelete: 'CASCADE',
+            eager: true
         }
     )
     author?: User;
@@ -55,7 +56,8 @@ export class Jam {
         type => User,
         user => user.attendedJams,
         {
-            onDelete: 'CASCADE'
+            onDelete: 'CASCADE',
+            eager: true
         }
     )
     @JoinTable()
