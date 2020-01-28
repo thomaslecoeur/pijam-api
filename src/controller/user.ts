@@ -61,7 +61,7 @@ export default class UserController {
             ctx.body = user;
         } else {
             // return a BAD REQUEST status code and error message
-            ctx.status = 400;
+            ctx.status = 404;
             ctx.body =
                 "The user you are trying to retrieve doesn't exist in the db";
         }
@@ -95,14 +95,13 @@ export default class UserController {
 
         if (errors.length > 0) {
             // return BAD REQUEST status code and errors array
-            console.log(errors);
-            ctx.status = 400;
+            ctx.status = 409;
             ctx.body = errors;
         } else if (
             await userRepository.findOne({ email: userToBeSaved.email })
         ) {
             // return BAD REQUEST status code and email already exists error
-            ctx.status = 400;
+            ctx.status = 409;
             ctx.body = 'The specified e-mail address already exists';
         } else {
             // save the user contained in the POST body
@@ -124,14 +123,14 @@ export default class UserController {
 
         // update the user by specified id
         // build up entity user to be updated
-        const userToBeUpdated: User = await userRepository.findOne({
-            auth0Id: ctx.state.user.id || 0
-        });
+        const userToBeUpdated: User = await userRepository.findOne(
+            +ctx.state.user.app_metadata.id || 0
+        );
 
         if (!userToBeUpdated) {
             // check if a user with the specified id exists
             // return a BAD REQUEST status code and error message
-            ctx.status = 400;
+            ctx.status = 404;
             ctx.body =
                 "The user you are trying to update doesn't exist in the db";
         } else {
@@ -149,7 +148,7 @@ export default class UserController {
 
             if (errors.length > 0) {
                 // return BAD REQUEST status code and errors array
-                ctx.status = 400;
+                ctx.status = 409;
                 ctx.body = errors;
             } else {
                 // save the user contained in the PUT body
@@ -228,10 +227,10 @@ export default class UserController {
         );
         if (!userToRemove) {
             // return a BAD REQUEST status code and error message
-            ctx.status = 400;
+            ctx.status = 404;
             ctx.body =
                 "The user you are trying to delete doesn't exist in the db";
-        } else if (ctx.state.user.id !== userToRemove.auth0Id) {
+        } else if (ctx.state.user.app_metadata.id !== userToRemove.id) {
             // check user's token id and user id are the same
             // if not, return a FORBIDDEN status code and error message
             ctx.status = 403;
