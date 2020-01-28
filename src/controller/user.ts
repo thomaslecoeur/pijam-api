@@ -249,7 +249,7 @@ export default class UserController {
 
         // find test users
         const usersToRemove: User[] = await userRepository.find({
-            where: { email: Like('%@citest.com') }
+            where: { email: Like('%@thomaslecoeur.test') }
         });
 
         // the user is there so can be removed

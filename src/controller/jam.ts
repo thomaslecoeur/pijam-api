@@ -297,7 +297,7 @@ export default class JamController {
 
         // find test jams
         const jamsToRemove: Jam[] = await jamRepository.find({
-            where: { email: Like('%@citest.com') }
+            author: { email: Like('%@thomaslecoeur.test') }
         });
 
         // the jam is there so can be removed
