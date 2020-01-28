@@ -95,6 +95,7 @@ export default class UserController {
 
         if (errors.length > 0) {
             // return BAD REQUEST status code and errors array
+            console.log(errors);
             ctx.status = 400;
             ctx.body = errors;
         } else if (
