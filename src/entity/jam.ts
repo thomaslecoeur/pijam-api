@@ -38,11 +38,10 @@ export class Jam {
             onDelete: 'CASCADE'
         }
     )
-    @IsDefined()
-    author: User;
+    author?: User;
 
     @Column('geometry', {
-        nullable: true,
+        nullable: true, // TODO: Set nullable to false
         spatialFeatureType: 'Point',
         srid: 4326
     })

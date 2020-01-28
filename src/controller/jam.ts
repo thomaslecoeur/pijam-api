@@ -5,7 +5,8 @@ import {
     Not,
     Equal,
     Like,
-    SelectQueryBuilder
+    SelectQueryBuilder,
+    getConnection
 } from 'typeorm';
 import { validate, ValidationError } from 'class-validator';
 import {
@@ -24,6 +25,8 @@ import * as qs from 'qs';
 
 @responsesAll({
     200: { description: 'success' },
+    201: { description: 'jam created' },
+    204: { description: 'jam updated' },
     400: { description: 'bad request' },
     401: { description: 'unauthorized, missing/wrong jwt token' }
 })
@@ -117,6 +120,56 @@ export default class JamController {
             ctx.status = 400;
             ctx.body =
                 "The jam you are trying to retrieve doesn't exist in the db";
+        }
+    }
+
+    @request('get', '/jams/{id}/join')
+    @summary('Join a jam by id')
+    @path({
+        id: { type: 'number', required: true, description: 'id of jam' }
+    })
+    public static async joinJam(ctx: BaseContext) {
+        // get a jam repository to perform operations with jam
+        const jamRepository: Repository<Jam> = getManager().getRepository(Jam);
+        const userRepository: Repository<User> = getManager().getRepository(
+            User
+        );
+
+        // load jam by id
+        const jamToJoin: Jam = await jamRepository.findOne(+ctx.params.id, {
+            relations: ['attendants']
+        });
+
+        const userToJoin: User = await userRepository.findOne(
+            +ctx.state.user.id
+        );
+
+        if (!jamToJoin) {
+            // return a BAD REQUEST status code and error message
+            ctx.status = 400;
+            ctx.body =
+                "The jam you are trying to retrieve doesn't exist in the db";
+        } else if (!userToJoin) {
+            // return a BAD REQUEST status code and error message
+            ctx.status = 400;
+            ctx.body =
+                "The user you are trying to retrieve doesn't exist in the db";
+        } else {
+            jamToJoin.attendants.push(userToJoin);
+
+            // validate jam entity
+            const errors: ValidationError[] = await validate(jamToJoin); // errors is an array of validation errors
+
+            if (errors.length > 0) {
+                // return BAD REQUEST status code and errors array
+                ctx.status = 400;
+                ctx.body = errors;
+            } else {
+                const jam = await jamRepository.save(jamToJoin);
+                // return OK status code and loaded jam object
+                ctx.status = 204;
+                ctx.body = jam;
+            }
         }
     }
 
