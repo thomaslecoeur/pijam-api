@@ -115,7 +115,7 @@ export default class JamController {
             ctx.body = jam;
         } else {
             // return a BAD REQUEST status code and error message
-            ctx.status = 400;
+            ctx.status = 404;
             ctx.body =
                 "The jam you are trying to retrieve doesn't exist in the db";
         }
@@ -144,12 +144,12 @@ export default class JamController {
 
         if (!jamToJoin) {
             // return a BAD REQUEST status code and error message
-            ctx.status = 400;
+            ctx.status = 404;
             ctx.body =
                 "The jam you are trying to retrieve doesn't exist in the db";
         } else if (!userToJoin) {
             // return a BAD REQUEST status code and error message
-            ctx.status = 400;
+            ctx.status = 404;
             ctx.body =
                 "The user you are trying to retrieve doesn't exist in the db";
         } else {
@@ -160,7 +160,7 @@ export default class JamController {
 
             if (errors.length > 0) {
                 // return BAD REQUEST status code and errors array
-                ctx.status = 400;
+                ctx.status = 409;
                 ctx.body = errors;
             } else {
                 const jam = await jamRepository.save(jamToJoin);
@@ -200,7 +200,7 @@ export default class JamController {
 
         if (errors.length > 0) {
             // return BAD REQUEST status code and errors array
-            ctx.status = 400;
+            ctx.status = 409;
             ctx.body = errors;
         } else {
             // save the jam contained in the POST body
@@ -231,12 +231,12 @@ export default class JamController {
 
         if (errors.length > 0) {
             // return BAD REQUEST status code and errors array
-            ctx.status = 400;
+            ctx.status = 409;
             ctx.body = errors;
         } else if (!(await jamRepository.findOne(jamToBeUpdated.id))) {
             // check if a jam with the specified id exists
             // return a BAD REQUEST status code and error message
-            ctx.status = 400;
+            ctx.status = 404;
             ctx.body =
                 "The jam you are trying to update doesn't exist in the db";
         } else if (
@@ -245,7 +245,7 @@ export default class JamController {
             })
         ) {
             // return BAD REQUEST status code and email already exists error
-            ctx.status = 400;
+            ctx.status = 409;
             ctx.body = 'The specified e-mail address already exists';
         } else {
             // save the jam contained in the PUT body
@@ -273,7 +273,7 @@ export default class JamController {
 
         if (!jamToRemove) {
             // return a BAD REQUEST status code and error message
-            ctx.status = 400;
+            ctx.status = 404;
             ctx.body =
                 "The jam you are trying to delete doesn't exist in the db";
         } else if (ctx.state.user.id !== jamToRemove.author.auth0Id) {
