@@ -175,19 +175,21 @@ export default class UserController {
 
         // update the user by specified id
         // build up entity user to be updated
-        const userToBeUpdated: User = new User();
-        userToBeUpdated.id = +ctx.params.id || 0; // will always have a number, this will avoid errors
-        userToBeUpdated.nickname = ctx.request.body.nickname;
-        userToBeUpdated.email = ctx.request.body.email;
-        userToBeUpdated.auth0Id = ctx.request.body.auth0Id;
+        const tmpUser: User = new User();
+        tmpUser.id = +ctx.params.id || 0; // will always have a number, this will avoid errors
+        tmpUser.nickname = ctx.request.body.nickname;
+        tmpUser.email = ctx.request.body.email;
+        tmpUser.auth0Id = ctx.request.body.auth0Id;
         // validate user entity
+        const userToBeUpdated = await userRepository.preload(tmpUser);
+
         const errors: ValidationError[] = await validate(userToBeUpdated); // errors is an array of validation errors
 
         if (errors.length > 0) {
             // return BAD REQUEST status code and errors array
             ctx.status = 409;
             ctx.body = errors;
-        } else if (!(await userRepository.findOne(userToBeUpdated.id))) {
+        } else if (!userToBeUpdated) {
             // check if a user with the specified id exists
             // return a BAD REQUEST status code and error message
             ctx.status = 404;
@@ -195,8 +197,8 @@ export default class UserController {
                 "The user you are trying to update doesn't exist in the db";
         } else if (
             await userRepository.findOne({
-                id: Not(Equal(userToBeUpdated.id)),
-                email: userToBeUpdated.email
+                id: Not(Equal(tmpUser.id)),
+                email: tmpUser.email
             })
         ) {
             // return BAD REQUEST status code and email already exists error
@@ -204,10 +206,10 @@ export default class UserController {
             ctx.body = 'The specified e-mail address already exists';
         } else {
             // save the user contained in the PUT body
-            const user = await userRepository.save(userToBeUpdated);
+            userRepository.save(userToBeUpdated);
             // return CREATED status code and updated user
             ctx.status = 201;
-            ctx.body = user;
+            ctx.body = userToBeUpdated;
         }
     }
 
