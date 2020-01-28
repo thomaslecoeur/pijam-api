@@ -138,9 +138,9 @@ export default class JamController {
             relations: ['attendants']
         });
 
-        const userToJoin: User = await userRepository.findOne({
-            auth0Id: ctx.state.user.id || 0
-        });
+        const userToJoin: User = await userRepository.findOne(
+            +ctx.state.user.app_metadata.id || 0
+        );
 
         if (!jamToJoin) {
             // return a BAD REQUEST status code and error message
@@ -185,9 +185,9 @@ export default class JamController {
         const jamToBeSaved: Jam = new Jam();
 
         // TODO: If user is super admin, allow ctx.request.body.id to find user
-        const author = await userRepository.findOne({
-            auth0Id: ctx.state.user.id
-        });
+        const author = await userRepository.findOne(
+            +ctx.state.user.app_metadata.id || 0
+        );
 
         jamToBeSaved.author = author;
 
@@ -276,7 +276,7 @@ export default class JamController {
             ctx.status = 404;
             ctx.body =
                 "The jam you are trying to delete doesn't exist in the db";
-        } else if (ctx.state.user.id !== jamToRemove.author.auth0Id) {
+        } else if (ctx.state.user.app_metadata.id !== jamToRemove.author.id) {
             // check jam's token id and jam id are the same
             // if not, return a FORBIDDEN status code and error message
             ctx.status = 403;
