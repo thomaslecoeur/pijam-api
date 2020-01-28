@@ -15,7 +15,7 @@ protectedRouter.put(
 protectedRouter.delete('/users/:id', controller.user.deleteUser);
 protectedRouter.delete('/testusers', controller.user.deleteTestUsers);
 
-// USER ROUTES
+// JAM ROUTES
 protectedRouter.get('/jams', controller.jam.getJams);
 protectedRouter.get('/jams/:id', controller.jam.getJam);
 protectedRouter.post('/jams', controller.jam.createJam);

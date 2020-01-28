@@ -41,7 +41,7 @@ export class Jam {
     author?: User;
 
     @Column('geometry', {
-        nullable: true, // TODO: Set nullable to false
+        nullable: false,
         spatialFeatureType: 'Point',
         srid: 4326
     })
