@@ -179,7 +179,7 @@ export default class UserController {
         userToBeUpdated.id = +ctx.params.id || 0; // will always have a number, this will avoid errors
         userToBeUpdated.nickname = ctx.request.body.nickname;
         userToBeUpdated.email = ctx.request.body.email;
-
+        userToBeUpdated.auth0Id = ctx.request.body.auth0Id;
         // validate user entity
         const errors: ValidationError[] = await validate(userToBeUpdated); // errors is an array of validation errors
 
