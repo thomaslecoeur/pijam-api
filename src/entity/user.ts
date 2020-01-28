@@ -55,9 +55,10 @@ export class User {
     auth0Id?: string;
 
     @Column({
-        length: 80
+        length: 80,
+        nullable: true
     })
-    @Length(2, 80)
+    @Length(0, 80)
     nickname: string;
 
     @Column({

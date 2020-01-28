@@ -90,14 +90,10 @@ export default class UserController {
         userToBeSaved.nickname = ctx.request.body.nickname;
         userToBeSaved.email = ctx.request.body.email;
 
-        console.log(ctx.request.body);
-        console.log(userToBeSaved);
-
         // validate user entity
         const errors: ValidationError[] = await validate(userToBeSaved); // errors is an array of validation errors
 
         if (errors.length > 0) {
-            console.log(errors);
             // return BAD REQUEST status code and errors array
             ctx.status = 400;
             ctx.body = errors;
