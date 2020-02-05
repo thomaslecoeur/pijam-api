@@ -73,7 +73,7 @@ export default class UserController {
     public static async createUser(ctx: BaseContext) {
         // TODO: Check if request comes from superadmin
         if (ctx.state.user.referer != 'auth0') {
-            ctx.status = 401;
+            ctx.status = 403;
             return;
         }
 
@@ -251,7 +251,7 @@ export default class UserController {
 
         // find test users
         const usersToRemove: User[] = await userRepository.find({
-            where: { email: Like('%@thomaslecoeur.test') }
+            where: { email: Like('%thomaslecoeur.test') }
         });
 
         // the user is there so can be removed
